@@ -4,7 +4,7 @@ OBJCOPY = llvm-objcopy
 OBJDUMP = llvm-objdump
 
 TARGET_TRIPLE = aarch64-none-elf
-CFLAGS_BARE = --target=$(TARGET_TRIPLE) -Wall -Wextra -O2 -ffreestanding -nostdlib -Iinclude
+CFLAGS_BARE = --target=$(TARGET_TRIPLE) -Wall -Wextra -O2 -ffreestanding -nostdlib -fno-builtin -mgeneral-regs-only -Iinclude
 ASFLAGS_BARE = --target=$(TARGET_TRIPLE) -c
 
 CFLAGS_HOST = -Wall -Wextra -O2 -Iinclude

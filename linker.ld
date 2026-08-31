@@ -26,9 +26,11 @@ SECTIONS
     }
 
     .bss : ALIGN(4K) {
+        . = ALIGN(16);
         __bss_start = .;
         *(.bss .bss.*)
         *(COMMON)
+        . = ALIGN(16);
         __bss_end = .;
     }
 
