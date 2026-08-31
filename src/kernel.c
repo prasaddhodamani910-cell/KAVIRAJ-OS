@@ -7,6 +7,7 @@
 #include "script.h"
 #include "tui.h"
 #include "kproj.h"
+#include "exceptions.h"
 
 #if defined(__STDC_HOSTED__) && __STDC_HOSTED__ == 1
 #include <stdlib.h>
@@ -404,10 +405,24 @@ void kmain(void) {
     uart_puts("\033[1;30m[    0.005120] \033[0mInitializing UART Controller... \033[1;32m[ OK ]\033[0m\n"); BOOT_DELAY(150);
     vfs_init();
     uart_puts("\033[1;30m[    0.041050] \033[0mMounting Virtual Filesystem...  \033[1;32m[ OK ]\033[0m\n"); BOOT_DELAY(200);
+    
+    // Initialize exception vectors (Stage 1)
+#if !defined(__STDC_HOSTED__) || __STDC_HOSTED__ == 0
+    init_exceptions();
+    uart_puts("\033[1;30m[    0.050000] \033[0mLoading Exception Vectors...    \033[1;32m[ OK ]\033[0m\n"); BOOT_DELAY(150);
+#endif
+
     process_init();
     script_init();
     uart_puts("\033[1;30m[    0.062120] \033[0mInitializing Task Scheduler...  \033[1;32m[ OK ]\033[0m\n"); BOOT_DELAY(150);
     BOOT_DELAY(400);
+
+#if !defined(__STDC_HOSTED__) || __STDC_HOSTED__ == 0
+    // Stage 1 Verification test: trigger synchronous exception
+    uart_puts("[Stage 1 Test] Triggering deliberate undefined instruction exception...\n");
+    trigger_undefined_instruction();
+    uart_puts("[Stage 1 Test] Resumed execution successfully after exception handler!\n\n");
+#endif
 
     print_banner();
     

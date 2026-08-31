@@ -59,7 +59,7 @@ char *kstrncpy(char *dest, const char *src, size_t n) {
     return ret;
 }
 
-void *kmemset(void *s, int c, size_t n) {
+void *memset(void *s, int c, size_t n) {
     if (!s) return s;
     unsigned char *p = (unsigned char *)s;
     while (n--) {
@@ -68,7 +68,7 @@ void *kmemset(void *s, int c, size_t n) {
     return s;
 }
 
-void *kmemcpy(void *dest, const void *src, size_t n) {
+void *memcpy(void *dest, const void *src, size_t n) {
     if (!dest || !src) return dest;
     unsigned char *d = (unsigned char *)dest;
     const unsigned char *s = (const unsigned char *)src;
