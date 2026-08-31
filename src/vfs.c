@@ -2,9 +2,6 @@
 #include "string.h"
 #include "uart.h"
 
-#if defined(__STDC_HOSTED__) && __STDC_HOSTED__ == 1
-#include <stdio.h>
-#endif
 
 static vfs_node_t node_pool[MAX_NODES];
 static int node_count = 0;
@@ -346,88 +343,14 @@ int vfs_list_dir(vfs_node_t *dir) {
 }
 
 void vfs_sync(void) {
-#if defined(__STDC_HOSTED__) && __STDC_HOSTED__ == 1
-    FILE *f = fopen("kaviraj_disk.img", "wb");
-    if (!f) return;
-    
-    // Make a temporary copy to manipulate pointers safely
-    vfs_node_t temp_pool[MAX_NODES];
-    memcpy(temp_pool, node_pool, sizeof(vfs_node_t) * node_count);
-    
-    for (int i = 0; i < node_count; i++) {
-        if (temp_pool[i].parent) {
-            long idx = temp_pool[i].parent - node_pool;
-            temp_pool[i].parent = (vfs_node_t*)idx;
-        } else {
-            temp_pool[i].parent = (vfs_node_t*)-1;
-        }
-        
-        for (int c = 0; c < temp_pool[i].child_count; c++) {
-            if (temp_pool[i].children[c]) {
-                long idx = temp_pool[i].children[c] - node_pool;
-                temp_pool[i].children[c] = (vfs_node_t*)idx;
-            } else {
-                temp_pool[i].children[c] = (vfs_node_t*)-1;
-            }
-        }
-    }
-    
-    long root_idx = root_dir ? (root_dir - node_pool) : -1;
-    long curr_idx = current_dir ? (current_dir - node_pool) : -1;
-    
-    fwrite(&node_count, sizeof(int), 1, f);
-    fwrite(temp_pool, sizeof(vfs_node_t), node_count, f);
-    fwrite(&root_idx, sizeof(long), 1, f);
-    fwrite(&curr_idx, sizeof(long), 1, f);
-    
-    fclose(f);
-#endif
+    // Persistent VFS syncing requires a storage block driver (Stage 5 / Stage 6).
+    // Host-dependent filesystem simulation (fopen/fwrite/fclose) removed.
 }
 
 int vfs_load_internal(void) {
-#if defined(__STDC_HOSTED__) && __STDC_HOSTED__ == 1
-    FILE *f = fopen("kaviraj_disk.img", "rb");
-    if (!f) return 0;
-    
-    fread(&node_count, sizeof(int), 1, f);
-    if (node_count <= 0 || node_count > MAX_NODES) {
-        fclose(f);
-        return 0; // corrupted or empty
-    }
-    
-    fread(node_pool, sizeof(vfs_node_t), node_count, f);
-    
-    long root_offset, curr_offset;
-    fread(&root_offset, sizeof(long), 1, f);
-    fread(&curr_offset, sizeof(long), 1, f);
-    
-    root_dir = (root_offset >= 0 && root_offset < node_count) ? &node_pool[root_offset] : NULL;
-    current_dir = (curr_offset >= 0 && curr_offset < node_count) ? &node_pool[curr_offset] : NULL;
-    
-    // Fix all pointers
-    for (int i = 0; i < node_count; i++) {
-        long p_off = (long)node_pool[i].parent;
-        if (p_off >= 0 && p_off < node_count) {
-            node_pool[i].parent = &node_pool[p_off];
-        } else {
-            node_pool[i].parent = NULL;
-        }
-        
-        for (int c = 0; c < node_pool[i].child_count; c++) {
-            long c_off = (long)node_pool[i].children[c];
-            if (c_off >= 0 && c_off < node_count) {
-                node_pool[i].children[c] = &node_pool[c_off];
-            } else {
-                node_pool[i].children[c] = NULL;
-            }
-        }
-    }
-    
-    fclose(f);
-    return 1;
-#else
+    // Persistent VFS loading requires a storage block driver (Stage 5 / Stage 6).
+    // Host-dependent filesystem simulation (fopen/fread/fclose) removed.
     return 0;
-#endif
 }
 
 void vfs_load(void) {

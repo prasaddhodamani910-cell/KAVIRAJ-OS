@@ -73,4 +73,7 @@ install: $(NATIVE_BIN)
 clean:
 	rm -rf $(BUILD_DIR) $(KERNEL_ELF) $(KERNEL_BIN) $(KERNEL_DISASM)
 
-.PHONY: all bare native run install clean
+run-qemu: bare
+	qemu-system-aarch64 -M virt -cpu cortex-a72 -kernel kernel.elf -nographic
+
+.PHONY: all bare native run run-qemu install clean

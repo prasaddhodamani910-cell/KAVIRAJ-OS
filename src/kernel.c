@@ -2,15 +2,10 @@
 #include "uart.h"
 #include "string.h"
 #include "vfs.h"
-#include "ai.h"
-extern void ai_auto_mode(const char *prompt);
 #include "kedit.h"
 #include "process.h"
 #include "script.h"
 #include "tui.h"
-#include "kpkg.h"
-#include "kimg.h"
-#include "kpy.h"
 #include "kproj.h"
 
 #if defined(__STDC_HOSTED__) && __STDC_HOSTED__ == 1
@@ -161,11 +156,9 @@ static void parse_args(const char *cmd_line, char *cmd, char *arg) {
 
 void print_help(void) {
     uart_puts("\033[1;37m========================= KAVIRAJ OS COMMANDS =========================\033[0m\n");
-    uart_puts("\033[1;35m[Applications & AI Assistant]\033[0m\n");
+    uart_puts("\033[1;35m[Applications]\033[0m\n");
     uart_puts("  tui / desktop     - Launch Dual-Pane Text User Interface\n");
-    uart_puts("  kedit <file>      - Launch Kedit Text Editor (MS-DOS style UI)\n");
-    uart_puts("  ai / chat         - Launch ChatGPT-style Kaviraj AI Assistant session\n");
-    uart_puts("  ai <question>     - Ask AI directly (e.g. 'ai explain pointers')\n\n");
+    uart_puts("  kedit <file>      - Launch Kedit Text Editor (MS-DOS style UI)\n\n");
 
     uart_puts("\033[1;33m[File System & Navigation]\033[0m\n");
     uart_puts("  ls / dir          - List files and directories in current folder\n");
@@ -187,13 +180,8 @@ void print_help(void) {
     uart_puts("  whoami            - Print current user identity\n");
     uart_puts("  android           - Show Android mobile hardware roadmap\n");
     uart_puts("  memdump           - Dump first 32 bytes of kernel code memory\n\n");
-
     uart_puts("\033[1;33m[Developer Tools]\033[0m\n");
-    uart_puts("  python <file>     - Execute a Python script from the VFS\n");
-    uart_puts("  python -c \"code\"  - Run inline Python code directly\n");
     uart_puts("  kproj <name>      - Scaffold a production Python project workspace\n");
-    uart_puts("  kpkg <cmd>        - Package Manager (update, list, install)\n");
-    uart_puts("  image <url>       - Render an image from URL in the terminal\n");
     uart_puts("  fetch             - Display system info (neofetch-style)\n\n");
 
     uart_puts("\033[1;33m[Utilities & Control]\033[0m\n");
@@ -221,20 +209,7 @@ void execute_command(char *cmd_buffer) {
         uart_printf("\033[1;36m    │\033[0m  \033[1;37mKaviraj OS\033[0m \033[36m%s\033[0m      \033[1;36m│\033[0m\n", OS_VERSION);
         uart_printf("\033[1;36m    │\033[0m  \033[33mDeveloper : \033[32m%s\033[0m           \033[1;36m│\033[0m\n", OS_CREATOR);
         uart_puts("\033[1;36m    ╰──────────────────────────────────────────────╯\033[0m\n");
-#if defined(__STDC_HOSTED__) && __STDC_HOSTED__ == 1
-        system("python3 -c \"\n"
-            "import json, os\n"
-            "f = os.path.expanduser('~/my_os/VERSION.json')\n"
-            "if os.path.exists(f):\n"
-            "    d = json.load(open(f))\n"
-            "    for h in d.get('history', [])[:5]:\n"
-            "        v = h['version']; t = h['type']; dt = h['date']\n"
-            "        print(f'  \\033[1;32m{v}\\033[0m  \\033[33m[{t}]\\033[0m  {dt}')\n"
-            "        for c in h.get('changes', []):\n"
-            "            print(f'    \\033[2m• {c}\\033[0m')\n"
-            "        print()\n"
-            "\"");
-#endif
+        // Changelog print removed to stay completely freestanding (no host Python calls)
     } else if (strcmp(cmd, "sysinfo") == 0) {
         print_sysinfo();
     } else if (strcmp(cmd, "rm") == 0) {
@@ -250,14 +225,8 @@ void execute_command(char *cmd_buffer) {
         } else {
             uart_puts("Usage: kedit <filename>\n");
         }
-    } else if (strcmp(cmd, "python") == 0 || strcmp(cmd, "py") == 0) {
-        kpy_execute(arg);
-    } else if (strcmp(cmd, "image") == 0) {
-        kimg_execute(arg);
     } else if (strcmp(cmd, "kproj") == 0) {
         kproj_execute(arg);
-    } else if (strcmp(cmd, "kpkg") == 0) {
-        kpkg_execute(arg);
     } else if (strcmp(cmd, "tui") == 0 || strcmp(cmd, "desktop") == 0) {
         tui_launch();
     } else if (strcmp(cmd, "ktop") == 0) {
@@ -364,14 +333,6 @@ void execute_command(char *cmd_buffer) {
         uart_puts("       Packages: kpkg Registry\n\n");
     } else if (strcmp(cmd, "clear") == 0 || strcmp(cmd, "cls") == 0) {
         uart_puts("\033[2J\033[H");
-    } else if (strcmp(cmd, "ai") == 0 || strcmp(cmd, "chat") == 0) {
-        if (strncmp(arg, "--auto ", 7) == 0) {
-            ai_auto_mode(arg + 7);
-        } else if (strlen(arg) > 0) {
-            ai_process_query(arg);
-        } else {
-            ai_start_interactive();
-        }
     } else if (strcmp(cmd, "sh") == 0 || strcmp(cmd, "run") == 0) {
         if (strlen(arg) > 0) {
             script_run_file(arg);
@@ -404,9 +365,7 @@ void execute_command(char *cmd_buffer) {
         }
 #endif
     } else {
-        if (!kpkg_try_run(cmd, arg)) {
-            uart_printf("\033[31m%s: command not found\033[0m\n", cmd);
-        }
+        uart_printf("\033[31m%s: command not found\033[0m\n", cmd);
     }
 }
 
@@ -444,24 +403,10 @@ void kmain(void) {
     uart_puts("\033[1;30m[    0.000000] \033[0mBooting Kaviraj OS Kernel...\n"); BOOT_DELAY(100);
     uart_puts("\033[1;30m[    0.005120] \033[0mInitializing UART Controller... \033[1;32m[ OK ]\033[0m\n"); BOOT_DELAY(150);
     vfs_init();
-    kpkg_init();
     uart_puts("\033[1;30m[    0.041050] \033[0mMounting Virtual Filesystem...  \033[1;32m[ OK ]\033[0m\n"); BOOT_DELAY(200);
     process_init();
     script_init();
     uart_puts("\033[1;30m[    0.062120] \033[0mInitializing Task Scheduler...  \033[1;32m[ OK ]\033[0m\n"); BOOT_DELAY(150);
-    ai_init();
-    uart_puts("\033[1;30m[    0.102500] \033[0mStarting AI Neural Daemon...    \033[1;32m[ OK ]\033[0m\n"); BOOT_DELAY(250);
-    uart_puts("\033[1;30m[    0.185200] \033[0mChecking Neural Link Status...  ");
-#if defined(__STDC_HOSTED__) && __STDC_HOSTED__ == 1
-    extern int cloud_connected;
-    if (cloud_connected) {
-        uart_puts("\033[1;35m[ PREMIUM ]\033[0m\n");
-    } else {
-        uart_puts("\033[1;36m[ FREE ENGINE ]\033[0m\n");
-    }
-#else
-    uart_puts("\033[1;33m[ EMBEDDED ]\033[0m\n");
-#endif
     BOOT_DELAY(400);
 
     print_banner();
