@@ -1,0 +1,150 @@
+{
+  "major": 5,
+  "minor": 0,
+  "patch": 0,
+  "label": "Developer Edition",
+  "history": [
+    {
+      "version": "v5.0.0",
+      "type": "Developer Edition",
+      "date": "2026-08-29",
+      "changes": [
+        "Phase 2 Started: Native Python Execution Engine"
+      ]
+    },
+    {
+      "version": "v4.0.0",
+      "type": "Developer Edition",
+      "date": "2026-08-29",
+      "changes": [
+        "Implemented Step 8: ANSI Image Rendering (Completed Full Roadmap!)"
+      ]
+    },
+    {
+      "version": "v3.5.0",
+      "type": "Small Update",
+      "date": "2026-08-29",
+      "changes": [
+        "Implemented Step 7: Package Manager (kpkg)"
+      ]
+    },
+    {
+      "version": "v3.4.1",
+      "type": "Quick Fix",
+      "date": "2026-08-29",
+      "changes": [
+        "Fixed uart_printf width specifier bug in TUI"
+      ]
+    },
+    {
+      "version": "v3.4.0",
+      "type": "Small Update",
+      "date": "2026-08-29",
+      "changes": [
+        "Implemented Step 6: TUI (Text User Interface) Windowing"
+      ]
+    },
+    {
+      "version": "v3.3.0",
+      "type": "Small Update",
+      "date": "2026-08-28",
+      "changes": [
+        "Implemented Step 5: Contextual AI Memory"
+      ]
+    },
+    {
+      "version": "v3.2.0",
+      "type": "Small Update",
+      "date": "2026-08-28",
+      "changes": [
+        "Implemented Step 3: Shell Scripting Engine (.kav files) and logic"
+      ]
+    },
+    {
+      "version": "v3.1.0",
+      "type": "Small Update",
+      "date": "2026-08-28",
+      "changes": [
+        "Implemented Step 2: ktop (Task Monitor) and process management"
+      ]
+    },
+    {
+      "version": "v3.0.0",
+      "type": "Developer Edition",
+      "date": "2026-08-28",
+      "changes": [
+        "Implemented Persistent Storage (kaviraj_disk.img) to save files across reboots"
+      ]
+    },
+    {
+      "version": "v2.1.1",
+      "type": "Quick Fix",
+      "date": "2026-08-28",
+      "changes": [
+        "Fixed floating cursor bug and added classic MS-DOS blue theme to kedit"
+      ]
+    },
+    {
+      "version": "v2.1.0",
+      "type": "Small Update",
+      "date": "2026-08-28",
+      "changes": [
+        "Added built-in Text Editor (kedit)"
+      ]
+    },
+    {
+      "version": "v2.0.0",
+      "type": "Developer Edition",
+      "date": "2026-08-28",
+      "changes": [
+        "Ultra-level UI overhaul",
+        "boot animations",
+        "modern shell prompt",
+        "and graphics fixes"
+      ]
+    },
+    {
+      "version": "v1.2.0",
+      "type": "Small Update",
+      "date": "2026-08-28",
+      "changes": [
+        "AI now works 100% free \u2014 no API key needed",
+        "Integrated Wikipedia, DuckDuckGo, Dictionary APIs",
+        "Built-in math, number spelling, code examples, translations",
+        "Optional Gemini premium mode with /key command"
+      ]
+    },
+    {
+      "version": "v1.1.0",
+      "type": "Small Update",
+      "date": "2026-08-27",
+      "changes": [
+        "Added Cloud AI Chat assistant (ai command)",
+        "Auto-boot Cloud AI Neural Daemon",
+        "Smart disambiguation filter for Wikipedia queries",
+        "Holiday & observances engine"
+      ]
+    },
+    {
+      "version": "v1.0.1",
+      "type": "Quick Fix",
+      "date": "2026-08-27",
+      "changes": [
+        "Fixed OS title from 'Kavizai OS' to 'Kaviraj OS'",
+        "Added CMD commands: clear, cd, cat, mkdir, exit"
+      ]
+    },
+    {
+      "version": "v1.0.0",
+      "type": "Developer Edition",
+      "date": "2026-08-27",
+      "changes": [
+        "Initial release of Kaviraj OS",
+        "Bare-metal 64-bit ARM kernel",
+        "Shell with basic commands",
+        "Virtual filesystem",
+        "System info display"
+      ]
+    }
+  ]
+}
