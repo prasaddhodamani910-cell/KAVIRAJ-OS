@@ -8,6 +8,8 @@
 #include "tui.h"
 #include "kproj.h"
 #include "exceptions.h"
+#include "gic.h"
+#include "timer.h"
 
 #if defined(__STDC_HOSTED__) && __STDC_HOSTED__ == 1
 #include <stdlib.h>
@@ -410,19 +412,19 @@ void kmain(void) {
 #if !defined(__STDC_HOSTED__) || __STDC_HOSTED__ == 0
     init_exceptions();
     uart_puts("\033[1;30m[    0.050000] \033[0mLoading Exception Vectors...    \033[1;32m[ OK ]\033[0m\n"); BOOT_DELAY(150);
+    
+    // Stage 2: Interrupts and Timer
+    gic_init();
+    uart_puts("\033[1;30m[    0.051000] \033[0mInitializing GICv2 Controller...\033[1;32m[ OK ]\033[0m\n"); BOOT_DELAY(150);
+    
+    timer_init();
+    uart_puts("\033[1;30m[    0.055000] \033[0mStarting Generic Timer...       \033[1;32m[ OK ]\033[0m\n"); BOOT_DELAY(150);
 #endif
 
     process_init();
     script_init();
     uart_puts("\033[1;30m[    0.062120] \033[0mInitializing Task Scheduler...  \033[1;32m[ OK ]\033[0m\n"); BOOT_DELAY(150);
     BOOT_DELAY(400);
-
-#if !defined(__STDC_HOSTED__) || __STDC_HOSTED__ == 0
-    // Stage 1 Verification test: trigger synchronous exception
-    uart_puts("[Stage 1 Test] Triggering deliberate undefined instruction exception...\n");
-    trigger_undefined_instruction();
-    uart_puts("[Stage 1 Test] Resumed execution successfully after exception handler!\n\n");
-#endif
 
     print_banner();
     

@@ -1,5 +1,7 @@
 #include "uart.h"
 #include "types.h"
+#include "gic.h"
+#include "timer.h"
 
 struct exception_context {
     uint64_t regs[31];
@@ -57,4 +59,16 @@ void c_handle_fiq_invalid(void) {
 void c_handle_serror_invalid(void) {
     uart_puts("[!] UNHANDLED SERROR EXCEPTION\n");
     while (1);
+}
+
+void handle_irq_exception(struct exception_context *ctx) {
+    uint32_t intid = gic_acknowledge_interrupt();
+    
+    if (intid == 30) {
+        timer_handle_interrupt();
+    } else if (intid != 1023) { // 1023 means spurious interrupt
+        uart_printf("[IRQ] Unknown interrupt ID: %d\n", intid);
+    }
+    
+    gic_end_interrupt(intid);
 }

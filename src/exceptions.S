@@ -69,14 +69,10 @@ curr_el_sp0_serror:
     /* Current EL with SPx (using SP_ELx) */
     .align 7
 curr_el_spx_sync:
-    save_context
-    mov     x0, sp
-    bl      handle_sync_exception
-    restore_context
-    eret
+    b   handle_sync_exception_asm
     .align 7
 curr_el_spx_irq:
-    b   handle_irq_invalid
+    b   handle_irq_exception_asm
     .align 7
 curr_el_spx_fiq:
     b   handle_fiq_invalid
@@ -121,6 +117,13 @@ handle_sync_invalid:
     restore_context
     eret
 
+handle_irq_exception_asm:
+    save_context
+    mov     x0, sp
+    bl      handle_irq_exception
+    restore_context
+    eret
+
 handle_irq_invalid:
     save_context
     bl      c_handle_irq_invalid
@@ -143,3 +146,10 @@ handle_serror_invalid:
 trigger_undefined_instruction:
     .inst 0x00000000 /* Undefined opcode */
     ret
+
+handle_sync_exception_asm:
+    save_context
+    mov     x0, sp
+    bl      handle_sync_exception
+    restore_context
+    eret

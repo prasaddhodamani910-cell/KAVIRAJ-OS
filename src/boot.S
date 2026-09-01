@@ -9,11 +9,13 @@ _start:
     cbz     x0, master_core
 
 park_core:
-    wfe
+    msr     daifset, #0xF
+    wfi
     b       park_core
 
 master_core:
     // 2. Initialize Stack Pointer to top of allocated kernel stack
+    msr     spsel, #1       // Force use of SP_EL1
     ldr     x0, =__stack_top
     mov     sp, x0
 
