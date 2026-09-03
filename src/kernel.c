@@ -10,6 +10,7 @@
 #include "exceptions.h"
 #include "gic.h"
 #include "timer.h"
+#include "pmm.h"
 
 #if defined(__STDC_HOSTED__) && __STDC_HOSTED__ == 1
 #include <stdlib.h>
@@ -419,6 +420,15 @@ void kmain(void) {
     
     timer_init();
     uart_puts("\033[1;30m[    0.055000] \033[0mStarting Generic Timer...       \033[1;32m[ OK ]\033[0m\n"); BOOT_DELAY(150);
+    
+    // Stage 3: Physical Memory Manager
+    pmm_init();
+    void *test_page = pmm_alloc_page();
+    if (test_page) {
+        uart_printf("[Stage 3 Test] Successfully allocated 4KB page at 0x%x\n", (uint32_t)(uint64_t)test_page);
+        pmm_free_page(test_page);
+        uart_puts("[Stage 3 Test] Successfully freed the page without errors.\n");
+    }
 #endif
 
     process_init();
