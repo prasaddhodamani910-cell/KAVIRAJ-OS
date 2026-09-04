@@ -1,16 +1,21 @@
-/*
- * exceptions.S - Exception Vector Table implementation for AArch64 EL1.
- * Refer to ARMv8-A architecture reference manual for Vector Table Offset Register (VBAR_EL1).
- */
-
 .section .text
 .global exception_vector_table
 .global trigger_undefined_instruction
 
-/* Macros to save and restore CPU state (Defined before usage so the assembler recognizes them) */
 .macro save_context
-    sub     sp, sp, #256
+    sub     sp, sp, #272
     stp     x0, x1, [sp, #0]
+    
+    mrs     x0, elr_el1
+    mrs     x1, spsr_el1
+    // We must match the C struct:
+    // lr is at 240
+    // elr is at 248
+    // spsr is at 256
+    stp     x0, x1, [sp, #248]
+    
+    ldp     x0, x1, [sp, #0]
+    
     stp     x2, x3, [sp, #16]
     stp     x4, x5, [sp, #32]
     stp     x6, x7, [sp, #48]
@@ -29,6 +34,10 @@
 .endm
 
 .macro restore_context
+    ldp     x0, x1, [sp, #248]
+    msr     elr_el1, x0
+    msr     spsr_el1, x1
+    
     ldp     x0, x1, [sp, #0]
     ldp     x2, x3, [sp, #16]
     ldp     x4, x5, [sp, #32]
@@ -45,14 +54,11 @@
     ldp     x26, x27, [sp, #208]
     ldp     x28, x29, [sp, #224]
     ldr     x30, [sp, #240]
-    add     sp, sp, #256
+    add     sp, sp, #272
 .endm
 
-/* Vector table must be aligned to a 2048-byte boundary */
 .align 11
 exception_vector_table:
-
-    /* Current EL with SP0 (using SP_EL0) */
     .align 7
 curr_el_sp0_sync:
     b   handle_sync_invalid
@@ -66,7 +72,6 @@ curr_el_sp0_fiq:
 curr_el_sp0_serror:
     b   handle_serror_invalid
 
-    /* Current EL with SPx (using SP_ELx) */
     .align 7
 curr_el_spx_sync:
     b   handle_sync_exception_asm
@@ -80,7 +85,6 @@ curr_el_spx_fiq:
 curr_el_spx_serror:
     b   handle_serror_invalid
 
-    /* Lower EL using AArch64 */
     .align 7
 lower_el_aarch64_sync:
     b   handle_sync_invalid
@@ -94,7 +98,6 @@ lower_el_aarch64_fiq:
 lower_el_aarch64_serror:
     b   handle_serror_invalid
 
-    /* Lower EL using AArch32 */
     .align 7
 lower_el_aarch32_sync:
     b   handle_sync_invalid
@@ -109,18 +112,10 @@ lower_el_aarch32_serror:
     b   handle_serror_invalid
 
 
-/* Default Handlers for unsupported vectors */
 handle_sync_invalid:
     save_context
     mov     x0, sp
     bl      c_handle_sync_invalid
-    restore_context
-    eret
-
-handle_irq_exception_asm:
-    save_context
-    mov     x0, sp
-    bl      handle_irq_exception
     restore_context
     eret
 
@@ -142,14 +137,22 @@ handle_serror_invalid:
     restore_context
     eret
 
-/* Triggers an undefined instruction exception to test Stage 1 */
 trigger_undefined_instruction:
-    .inst 0x00000000 /* Undefined opcode */
+    .inst 0x00000000
     ret
 
 handle_sync_exception_asm:
     save_context
     mov     x0, sp
     bl      handle_sync_exception
+    mov     sp, x0
+    restore_context
+    eret
+
+handle_irq_exception_asm:
+    save_context
+    mov     x0, sp
+    bl      handle_irq_exception
+    mov     sp, x0
     restore_context
     eret

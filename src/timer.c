@@ -11,8 +11,8 @@ void timer_init(void) {
     // Read the timer frequency
     __asm__ volatile ("mrs %0, cntfrq_el0" : "=r" (timer_frequency));
     
-    // Set the compare value for 1 tick (1 per second)
-    __asm__ volatile ("msr cntp_tval_el0, %0" :: "r" (timer_frequency));
+    // Set the compare value for 10 ticks per second (100ms)
+    __asm__ volatile ("msr cntp_tval_el0, %0" :: "r" (timer_frequency / 10));
 
     // Enable the timer
     uint64_t ctl = 1;
@@ -30,9 +30,8 @@ void timer_init(void) {
 
 void timer_handle_interrupt(void) {
     ticks++;
-    // Print a dot every tick
-    uart_puts(".");
+    // Silent tick
 
-    // Reset the compare value for the next interrupt
-    __asm__ volatile ("msr cntp_tval_el0, %0" :: "r" (timer_frequency));
+    // Reset the compare value for the next interrupt (10Hz)
+    __asm__ volatile ("msr cntp_tval_el0, %0" :: "r" (timer_frequency / 10));
 }

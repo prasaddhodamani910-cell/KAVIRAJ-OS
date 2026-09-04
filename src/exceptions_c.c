@@ -2,25 +2,18 @@
 #include "types.h"
 #include "gic.h"
 #include "timer.h"
+#include "sched.h"
 
-struct exception_context {
-    uint64_t regs[31];
-};
-
-void handle_sync_exception(struct exception_context *ctx) {
-    uint64_t esr, elr, far;
-    
-    // Read Exception Syndrome Register, Exception Link Register, Fault Address Register
+struct exception_context *handle_sync_exception(struct exception_context *ctx) {
+    uint64_t esr, far;
     __asm__ volatile("mrs %0, esr_el1" : "=r" (esr));
-    __asm__ volatile("mrs %0, elr_el1" : "=r" (elr));
     __asm__ volatile("mrs %0, far_el1" : "=r" (far));
 
     uart_puts("\n\033[31;1m[!] SYNCHRONOUS EXCEPTION TRIGGERED [!]\033[0m\n");
     uart_printf("  ESR_EL1: 0x%x\n", esr);
-    uart_printf("  ELR_EL1 (PC of faulting instruction): 0x%x\n", elr);
+    uart_printf("  ELR_EL1 (PC of faulting instruction): 0x%x\n", ctx->elr_el1);
     uart_printf("  FAR_EL1 (Faulting Virtual Address): 0x%x\n", far);
     
-    // Extract EC (Exception Class) from ESR
     uint32_t ec = (esr >> 26) & 0x3F;
     uart_printf("  Exception Class (EC): 0x%x\n", ec);
     if (ec == 0x0) {
@@ -31,18 +24,16 @@ void handle_sync_exception(struct exception_context *ctx) {
         uart_puts("  Type: SVC Call\n");
     }
 
-    // Recover by incrementing ELR to next instruction
-    elr += 4;
-    __asm__ volatile("msr elr_el1, %0" : : "r" (elr));
+    ctx->elr_el1 += 4;
     uart_puts("\033[32m[+] Recovering from exception. Resuming execution...\033[0m\n\n");
+    return ctx;
 }
 
 void c_handle_sync_invalid(struct exception_context *ctx) {
-    uint64_t esr, elr;
+    uint64_t esr;
     __asm__ volatile("mrs %0, esr_el1" : "=r" (esr));
-    __asm__ volatile("mrs %0, elr_el1" : "=r" (elr));
     uart_printf("\n\033[31;1m[!] UNHANDLED SYNCHRONOUS EXCEPTION [!]\033[0m\n");
-    uart_printf("  ESR_EL1: 0x%x | ELR_EL1: 0x%x\n", esr, elr);
+    uart_printf("  ESR_EL1: 0x%x | ELR_EL1: 0x%x\n", esr, ctx->elr_el1);
     while (1);
 }
 
@@ -61,14 +52,16 @@ void c_handle_serror_invalid(void) {
     while (1);
 }
 
-void handle_irq_exception(struct exception_context *ctx) {
+struct exception_context *handle_irq_exception(struct exception_context *ctx) {
     uint32_t intid = gic_acknowledge_interrupt();
     
     if (intid == 30) {
         timer_handle_interrupt();
-    } else if (intid != 1023) { // 1023 means spurious interrupt
+        ctx = sched_switch(ctx);
+    } else if (intid != 1023) {
         uart_printf("[IRQ] Unknown interrupt ID: %d\n", intid);
     }
     
     gic_end_interrupt(intid);
+    return ctx;
 }

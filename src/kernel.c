@@ -11,6 +11,7 @@
 #include "gic.h"
 #include "timer.h"
 #include "pmm.h"
+#include "sched.h"
 
 #if defined(__STDC_HOSTED__) && __STDC_HOSTED__ == 1
 #include <stdlib.h>
@@ -41,6 +42,13 @@ static uint64_t get_current_el(void) {
     __asm__ volatile("mrs %0, CurrentEL" : "=r"(el));
     return (el >> 2) & 0x3;
 #endif
+}
+
+void system_idle_daemon(void) {
+    while (1) {
+        uart_puts("B");
+        for (volatile int i = 0; i < 50000000; i++);
+    }
 }
 
 static uint64_t get_midr(void) {
@@ -423,11 +431,21 @@ void kmain(void) {
     
     // Stage 3: Physical Memory Manager
     pmm_init();
-    void *test_page = pmm_alloc_page();
-    if (test_page) {
-        uart_printf("[Stage 3 Test] Successfully allocated 4KB page at 0x%x\n", (uint32_t)(uint64_t)test_page);
-        pmm_free_page(test_page);
-        uart_puts("[Stage 3 Test] Successfully freed the page without errors.\n");
+    
+    // Stage 4: Task Scheduler
+    sched_init();
+    
+    // Create a background daemon task
+    sched_create_task(system_idle_daemon);
+    
+    // Start interrupts, which starts the timer, which triggers the scheduler!
+    uart_puts("[+] Enabling IRQs. Let the multitasking begin!\n");
+    __asm__ volatile ("msr daifclr, #2");
+    
+    // We are Task 0. We will also loop.
+    while (1) {
+        uart_puts("A");
+        for (volatile int i = 0; i < 50000000; i++);
     }
 #endif
 

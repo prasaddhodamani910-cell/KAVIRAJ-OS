@@ -17,8 +17,22 @@ SRC_DIR = src
 
 SRCS_C = $(wildcard $(SRC_DIR)/*.c)
 SRCS_S = $(wildcard $(SRC_DIR)/*.S)
-OBJS_BARE = $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/bare_%.o, $(SRCS_C)) \
-            $(patsubst $(SRC_DIR)/%.S, $(BUILD_DIR)/bare_%.o, $(SRCS_S))
+BARE_OBJS = $(BUILD_DIR)/bare_exceptions_c.o \
+            $(BUILD_DIR)/bare_gic.o \
+            $(BUILD_DIR)/bare_kedit.o \
+            $(BUILD_DIR)/bare_kernel.o \
+            $(BUILD_DIR)/bare_kproj.o \
+            $(BUILD_DIR)/bare_process.o \
+            $(BUILD_DIR)/bare_script.o \
+            $(BUILD_DIR)/bare_string.o \
+            $(BUILD_DIR)/bare_timer.o \
+            $(BUILD_DIR)/bare_tui.o \
+            $(BUILD_DIR)/bare_uart.o \
+            $(BUILD_DIR)/bare_vfs.o \
+            $(BUILD_DIR)/bare_pmm.o \
+            $(BUILD_DIR)/bare_sched.o \
+            $(BUILD_DIR)/bare_boot.o \
+            $(BUILD_DIR)/bare_exceptions.o
 
 KERNEL_ELF = kernel.elf
 KERNEL_BIN = kernel.bin
@@ -40,8 +54,8 @@ $(BUILD_DIR)/bare_%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
 $(BUILD_DIR)/bare_%.o: $(SRC_DIR)/%.S | $(BUILD_DIR)
 	$(CC) $(ASFLAGS_BARE) $< -o $@
 
-$(KERNEL_ELF): $(OBJS_BARE) linker.ld
-	$(LD) -T linker.ld -nostdlib $(OBJS_BARE) -o $@
+$(KERNEL_ELF): $(BARE_OBJS) linker.ld
+	$(LD) -T linker.ld -nostdlib $(BARE_OBJS) -o $@
 
 $(KERNEL_BIN): $(KERNEL_ELF)
 	$(OBJCOPY) -O binary $< $@
