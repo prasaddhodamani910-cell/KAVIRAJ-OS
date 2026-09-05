@@ -84,7 +84,6 @@ int script_execute_line(char *line) {
     script_expand_vars(line, expanded);
 
     // Simple variable assignment: VAR=VALUE
-    int is_assignment = 0;
     for (int i = 0; expanded[i] != '\0'; i++) {
         if (expanded[i] == '=' && i > 0 && expanded[i-1] != '=' && expanded[i+1] != '=') {
             // Might be an assignment. Let's check if there are spaces before =
