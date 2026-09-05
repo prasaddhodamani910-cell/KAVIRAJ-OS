@@ -12,6 +12,7 @@
 #include "timer.h"
 #include "pmm.h"
 #include "sched.h"
+#include "virtio.h"
 
 #if defined(__STDC_HOSTED__) && __STDC_HOSTED__ == 1
 #include <stdlib.h>
@@ -434,6 +435,14 @@ void kmain(void) {
     
     // Stage 4: Task Scheduler
     sched_init();
+    
+    // Stage 5: Virtio Block Driver
+    if (virtio_blk_init()) {
+        uint8_t sector_buf[512];
+        if (virtio_blk_read_sector(0, sector_buf)) {
+            uart_puts("[Stage 5 Test] Successfully read Sector 0 from virtio disk!\n");
+        }
+    }
     
     // Create a background daemon task
     sched_create_task(system_idle_daemon);

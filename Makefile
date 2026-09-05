@@ -31,6 +31,7 @@ BARE_OBJS = $(BUILD_DIR)/bare_exceptions_c.o \
             $(BUILD_DIR)/bare_vfs.o \
             $(BUILD_DIR)/bare_pmm.o \
             $(BUILD_DIR)/bare_sched.o \
+            $(BUILD_DIR)/bare_virtio.o \
             $(BUILD_DIR)/bare_boot.o \
             $(BUILD_DIR)/bare_exceptions.o
 
@@ -87,7 +88,10 @@ install: $(NATIVE_BIN)
 clean:
 	rm -rf $(BUILD_DIR) $(KERNEL_ELF) $(KERNEL_BIN) $(KERNEL_DISASM)
 
-run-qemu: bare
-	qemu-system-aarch64 -M virt -cpu cortex-a72 -kernel kernel.elf -nographic
+disk.img:
+	dd if=/dev/zero of=disk.img bs=1M count=64
+
+run-qemu: bare disk.img
+	qemu-system-aarch64 -M virt -cpu cortex-a72 -kernel kernel.elf -nographic -drive file=disk.img,if=none,format=raw,id=hd0 -device virtio-blk-device,drive=hd0
 
 .PHONY: all bare native run run-qemu install clean
