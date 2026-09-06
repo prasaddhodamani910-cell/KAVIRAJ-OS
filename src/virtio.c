@@ -228,3 +228,54 @@ int virtio_blk_read_sector(uint64_t sector, void *buffer) {
 
     return 1;
 }
+
+int virtio_blk_write_sector(uint64_t sector, const void *buffer) {
+    if (!blk_base) return 0;
+
+    static struct virtio_blk_req req;
+    static volatile uint8_t req_status;
+
+    req.type = 1; // VIRTIO_BLK_T_OUT (Write)
+    req.reserved = 0;
+    req.sector = sector;
+    req_status = 255;
+
+    // Desc 0: Header (Read-only for device)
+    vq_desc[0].addr = (uint64_t)&req;
+    vq_desc[0].len = sizeof(struct virtio_blk_req);
+    vq_desc[0].flags = 1; // VIRTQ_DESC_F_NEXT
+    vq_desc[0].next = 1;
+
+    // Desc 1: Data Buffer (Read-only for device)
+    vq_desc[1].addr = (uint64_t)buffer;
+    vq_desc[1].len = 512;
+    vq_desc[1].flags = 1; // NEXT
+    vq_desc[1].next = 2;
+
+    // Desc 2: Status (Write-only for device)
+    vq_desc[2].addr = (uint64_t)&req_status;
+    vq_desc[2].len = 1;
+    vq_desc[2].flags = 2; // WRITE
+    vq_desc[2].next = 0;
+
+    vq_avail->ring[avail_idx % QUEUE_SIZE] = 0;
+    avail_idx++;
+    vq_avail->idx = avail_idx;
+    
+    __asm__ volatile("dmb sy" ::: "memory");
+    mmio_write32(blk_base, VIRTIO_REG_QUEUE_NOTIFY, 0);
+
+    uint16_t last_used_idx = vq_used->idx;
+    int timeout = 10000000;
+    while (vq_used->idx == last_used_idx && timeout > 0) {
+        for(volatile int i=0; i<100; i++);
+        timeout--;
+    }
+
+    if (req_status != 0) {
+        uart_printf("[-] Virtio Write Error (Status: %d)\n", req_status);
+        return 0;
+    }
+
+    return 1;
+}

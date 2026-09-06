@@ -39,9 +39,11 @@ static vfs_node_t *alloc_node(const char *name, vfs_type_t type, vfs_node_t *par
 }
 
 void vfs_init(void) {
-    if (vfs_load_internal()) {
-        return; // Successfully loaded from persistent storage
-    }
+    // Load persistent filesystem
+    // We will do this manually after block drivers are initialized
+    // if (vfs_load_internal()) {
+    //     uart_puts("VFS loaded from storage.\n");
+    // }
 
     node_count = 0;
     root_dir = alloc_node("/", FS_DIR, NULL);
@@ -287,7 +289,10 @@ int vfs_touch(const char *path, const char *initial_data) {
     return 0;
 }
 
+#include "fat16.h"
+
 int vfs_write_file(const char *name, const char *data) {
+    fat16_write_file(name, data, strlen(data));
     return vfs_touch(name, data);
 }
 
@@ -310,7 +315,6 @@ int vfs_remove(const char *name) {
     }
     current_dir->children[current_dir->child_count - 1] = NULL;
     current_dir->child_count--;
-    vfs_sync();
     return 0;
 }
 
@@ -343,13 +347,10 @@ int vfs_list_dir(vfs_node_t *dir) {
 }
 
 void vfs_sync(void) {
-    // Persistent VFS syncing requires a storage block driver (Stage 5 / Stage 6).
-    // Host-dependent filesystem simulation (fopen/fwrite/fclose) removed.
 }
 
 int vfs_load_internal(void) {
-    // Persistent VFS loading requires a storage block driver (Stage 5 / Stage 6).
-    // Host-dependent filesystem simulation (fopen/fread/fclose) removed.
+    fat16_populate_vfs();
     return 0;
 }
 

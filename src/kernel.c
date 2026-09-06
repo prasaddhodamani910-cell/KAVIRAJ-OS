@@ -13,6 +13,7 @@
 #include "pmm.h"
 #include "sched.h"
 #include "virtio.h"
+#include "fat16.h"
 
 #if defined(__STDC_HOSTED__) && __STDC_HOSTED__ == 1
 #include <stdlib.h>
@@ -442,6 +443,10 @@ void kmain(void) {
         if (virtio_blk_read_sector(0, sector_buf)) {
             uart_puts("[Stage 5 Test] Successfully read Sector 0 from virtio disk!\n");
         }
+        
+        // Stage 6: FAT16 Filesystem
+        fat16_init();
+        vfs_load(); // Loads FAT16 files into RAM VFS!
     }
     
     // Create a background daemon task

@@ -32,6 +32,7 @@ BARE_OBJS = $(BUILD_DIR)/bare_exceptions_c.o \
             $(BUILD_DIR)/bare_pmm.o \
             $(BUILD_DIR)/bare_sched.o \
             $(BUILD_DIR)/bare_virtio.o \
+            $(BUILD_DIR)/bare_fat16.o \
             $(BUILD_DIR)/bare_boot.o \
             $(BUILD_DIR)/bare_exceptions.o
 
@@ -90,6 +91,10 @@ clean:
 
 disk.img:
 	dd if=/dev/zero of=disk.img bs=1M count=64
+	mkfs.fat -F 16 disk.img
+	echo "Hello from FAT16! This file was injected from the host machine." > test.txt
+	mcopy -i disk.img test.txt ::/TEST.TXT
+	rm test.txt
 
 run-qemu: bare disk.img
 	qemu-system-aarch64 -M virt -cpu cortex-a72 -kernel kernel.elf -nographic -drive file=disk.img,if=none,format=raw,id=hd0 -device virtio-blk-device,drive=hd0
