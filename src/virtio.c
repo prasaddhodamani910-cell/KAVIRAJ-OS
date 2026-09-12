@@ -38,32 +38,6 @@
 
 #define QUEUE_SIZE 16
 
-struct virtq_desc {
-    uint64_t addr;
-    uint32_t len;
-    uint16_t flags;
-    uint16_t next;
-} __attribute__((packed));
-
-struct virtq_avail {
-    uint16_t flags;
-    uint16_t idx;
-    uint16_t ring[QUEUE_SIZE];
-    uint16_t used_event;
-} __attribute__((packed));
-
-struct virtq_used_elem {
-    uint32_t id;
-    uint32_t len;
-} __attribute__((packed));
-
-struct virtq_used {
-    volatile uint16_t flags;
-    volatile uint16_t idx;
-    struct virtq_used_elem ring[QUEUE_SIZE];
-    volatile uint16_t avail_event;
-} __attribute__((packed));
-
 struct virtio_blk_req {
     uint32_t type;
     uint32_t reserved;

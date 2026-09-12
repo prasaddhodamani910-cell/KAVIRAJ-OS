@@ -49,8 +49,8 @@ static uint64_t get_current_el(void) {
 
 void system_idle_daemon(void) {
     while (1) {
-        uart_puts("B");
-        for (volatile int i = 0; i < 50000000; i++);
+        virtio_net_poll();
+        for (volatile int i = 0; i < 50000; i++);
     }
 }
 
@@ -410,6 +410,63 @@ void kernel_shell(void) {
     }
 }
 
+struct eth_hdr {
+    uint8_t dst_mac[6];
+    uint8_t src_mac[6];
+    uint16_t ethertype;
+} __attribute__((packed));
+
+struct arp_ipv4 {
+    uint16_t htype;
+    uint16_t ptype;
+    uint8_t  hlen;
+    uint8_t  plen;
+    uint16_t oper;
+    uint8_t  sha[6];
+    uint8_t  spa[4];
+    uint8_t  tha[6];
+    uint8_t  tpa[4];
+} __attribute__((packed));
+
+#define htons(x) ((((x) & 0xff) << 8) | (((x) & 0xff00) >> 8))
+
+void test_arp(void) {
+    uint8_t packet[60];
+    for (int i=0; i<60; i++) packet[i] = 0; // Pad with zeros to 60 bytes
+    
+    struct eth_hdr *eth = (struct eth_hdr *)packet;
+    struct arp_ipv4 *arp = (struct arp_ipv4 *)(packet + sizeof(struct eth_hdr));
+    
+    uint8_t my_mac[6];
+    virtio_net_get_mac(my_mac);
+    
+    // Broadcast MAC
+    for(int i=0; i<6; i++) eth->dst_mac[i] = 0xFF;
+    for(int i=0; i<6; i++) eth->src_mac[i] = my_mac[i];
+    eth->ethertype = htons(0x0806);
+    
+    arp->htype = htons(1);
+    arp->ptype = htons(0x0800);
+    arp->hlen = 6;
+    arp->plen = 4;
+    arp->oper = htons(1); // Request
+    
+    for(int i=0; i<6; i++) arp->sha[i] = my_mac[i];
+    arp->spa[0] = 10; arp->spa[1] = 0; arp->spa[2] = 2; arp->spa[3] = 15;
+    
+    for(int i=0; i<6; i++) arp->tha[i] = 0x00;
+    arp->tpa[0] = 10; arp->tpa[1] = 0; arp->tpa[2] = 2; arp->tpa[3] = 2;
+    
+    uart_puts("[ARP] Sending packet:\n");
+    for (int i = 0; i < 60; i++) {
+        uart_printf("%x ", packet[i]);
+        if ((i + 1) % 16 == 0) uart_puts("\n");
+    }
+    uart_puts("\n");
+    
+    virtio_net_send(packet, 60);
+}
+
 void kmain(void) {
     uart_init();
     uart_puts("\033[2J\033[H");
@@ -451,6 +508,7 @@ void kmain(void) {
         
         // Stage 7: Network Interface
         virtio_net_init();
+        test_arp();
     }
     
     // Create a background daemon task
@@ -462,7 +520,6 @@ void kmain(void) {
     
     // We are Task 0. We will also loop.
     while (1) {
-        uart_puts("A");
         for (volatile int i = 0; i < 50000000; i++);
     }
 #endif
