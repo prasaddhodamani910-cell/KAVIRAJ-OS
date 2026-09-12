@@ -78,13 +78,7 @@ static struct virtq_used *vq_used;
 static uint64_t blk_base = 0;
 static uint16_t avail_idx = 0;
 
-static uint32_t mmio_read32(uint64_t base, uint64_t offset) {
-    return *(volatile uint32_t *)(base + offset);
-}
-
-static void mmio_write32(uint64_t base, uint64_t offset, uint32_t value) {
-    *(volatile uint32_t *)(base + offset) = value;
-}
+#include "mmio.h"
 
 int virtio_blk_init(void) {
     // 1. Probe for virtio block device

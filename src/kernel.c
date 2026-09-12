@@ -14,6 +14,7 @@
 #include "sched.h"
 #include "virtio.h"
 #include "fat16.h"
+#include "net.h"
 
 #if defined(__STDC_HOSTED__) && __STDC_HOSTED__ == 1
 #include <stdlib.h>
@@ -447,6 +448,9 @@ void kmain(void) {
         // Stage 6: FAT16 Filesystem
         fat16_init();
         vfs_load(); // Loads FAT16 files into RAM VFS!
+        
+        // Stage 7: Network Interface
+        virtio_net_init();
     }
     
     // Create a background daemon task
