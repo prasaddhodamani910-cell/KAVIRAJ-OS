@@ -108,7 +108,7 @@ int virtio_blk_init(void) {
     
     // Memory layout: Desc -> Avail -> Padding -> Used
     // In legacy virtio, Used ring must be aligned to the QueueAlign boundary (usually 4096)
-    mmio_write32(blk_base, 0x028, 4096); // VIRTIO_REG_QUEUE_ALIGN = 4096
+    mmio_write32(blk_base, 0x028, 4096); // VIRTIO_REG_GUEST_PAGE_SIZE
     
     vq_desc = (struct virtq_desc *)queue_page;
     vq_avail = (struct virtq_avail *)((uint8_t *)vq_desc + sizeof(struct virtq_desc) * QUEUE_SIZE);
@@ -183,8 +183,9 @@ int virtio_blk_read_sector(uint64_t sector, void *buffer) {
 
     // Poll for completion
     uint16_t last_used_idx = vq_used->idx;
-    int timeout = 10000000;
+    int timeout = 100000;
     while (vq_used->idx == last_used_idx && timeout > 0) {
+        __asm__ volatile("dmb sy" ::: "memory");
         for(volatile int i=0; i<100; i++);
         timeout--;
     }
@@ -234,8 +235,9 @@ int virtio_blk_write_sector(uint64_t sector, const void *buffer) {
     mmio_write32(blk_base, VIRTIO_REG_QUEUE_NOTIFY, 0);
 
     uint16_t last_used_idx = vq_used->idx;
-    int timeout = 10000000;
+    int timeout = 100000;
     while (vq_used->idx == last_used_idx && timeout > 0) {
+        __asm__ volatile("dmb sy" ::: "memory");
         for(volatile int i=0; i<100; i++);
         timeout--;
     }

@@ -504,11 +504,12 @@ void kmain(void) {
         
         // Stage 6: FAT16 Filesystem
         fat16_init();
+        uart_puts("[Kernel] vfs_load()...\n");
         vfs_load(); // Loads FAT16 files into RAM VFS!
+        uart_puts("[Kernel] virtio_net_init()...\n");
         
         // Stage 7: Network Interface
         virtio_net_init();
-        test_arp();
     }
     
     // Create a background daemon task
