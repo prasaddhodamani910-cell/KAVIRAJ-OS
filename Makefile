@@ -100,6 +100,8 @@ disk.img:
 run-qemu: bare disk.img
 	qemu-system-aarch64 -M virt -cpu cortex-a72 -kernel kernel.elf -nographic \
 		-drive file=disk.img,if=none,format=raw,id=hd0 -device virtio-blk-device,drive=hd0 \
-		-netdev user,id=net0,net=10.0.2.0/24,host=10.0.2.2,dns=10.0.2.3 -device virtio-net-device,netdev=net0
+		-netdev user,id=net0,net=10.0.2.0/24,host=10.0.2.2,dns=10.0.2.3 \
+		-device virtio-net-device,netdev=net0 \
+		-object filter-dump,id=f1,netdev=net0,file=net.pcap
 
 .PHONY: all bare native run run-qemu install clean

@@ -141,7 +141,7 @@ void virtio_net_init(void) {
     setup_queue(1, &tx_desc, &tx_avail, &tx_used);
     
     // Populate RX queue with buffers
-    for (int i = 0; i < net_qmax; i++) {
+    for (uint32_t i = 0; i < net_qmax; i++) {
         rx_desc[i].addr = (uint64_t)rx_buffers[i];
         rx_desc[i].len = RX_BUFFER_SIZE;
         rx_desc[i].flags = 2; // VIRTQ_DESC_F_WRITE (device writes to it)
